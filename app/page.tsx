@@ -6,10 +6,19 @@ import { toast } from "@/components/ui/use-toast"
 import { setLocalStorage } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import React from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Zap } from 'lucide-react'
 
 export default function Home() {
   const router = useRouter()
   const [prompt, setPrompt] = React.useState("")
+  const [model, setModel] = React.useState("deepseek-v3")
 
   const handleOptimize = () => {
     if (!prompt.trim()) {
@@ -22,7 +31,8 @@ export default function Home() {
     }
 
     setLocalStorage('optimizedPrompt', JSON.stringify({
-      originalPrompt: prompt
+      originalPrompt: prompt,
+      model: model  // 保存选择的模型
     }))
     
     router.push('/optimize')
@@ -44,7 +54,19 @@ export default function Home() {
               placeholder="请输入需要优化的prompt..."
             />
             
-            <div className="flex justify-end">
+            <div className="flex justify-end items-center gap-4">
+              <Select defaultValue="deepseek-v3" onValueChange={setModel}>
+                <SelectTrigger className="w-[200px] h-12 sm:h-16 text-base sm:text-lg bg-white border-orange-200 text-orange-600 rounded-xl sm:rounded-2xl">
+                  <Zap className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="deepseek-v3">DeepSeek V3</SelectItem>
+                  <SelectItem value="gemini-1206">Gemini 1206</SelectItem>
+                  <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash</SelectItem>
+                </SelectContent>
+              </Select>
+              
               <Button
                 className="h-12 sm:h-16 px-6 sm:px-8 text-base sm:text-lg rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 to-green-600 text-white hover:from-blue-700 hover:to-green-700 transition-all duration-300 ease-in-out transform hover:scale-105"
                 onClick={handleOptimize}
