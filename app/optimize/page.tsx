@@ -321,30 +321,6 @@ export default function OptimizePage() {
     try {
       setIsLoading(true)
       setTestResult(null)
-      
-      let updateTimeout: NodeJS.Timeout | null = null
-      let contentBuffer = ""
-      let lastUpdateTime = Date.now()
-
-      const updateTestResult = (content: string, force = false) => {
-        if (!force) {
-          const [should, newTime] = shouldUpdate(lastUpdateTime)
-          if (!should) return
-          lastUpdateTime = newTime
-        }
-
-        if (updateTimeout) {
-          clearTimeout(updateTimeout)
-        }
-
-        updateTimeout = setTimeout(() => {
-          setTestResult(prev => ({
-            input: testInput,
-            output: content,
-            model: model
-          }))
-        }, 200)
-      }
 
       if (model === "deepseek-v3") {
         const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -380,7 +356,11 @@ export default function OptimizePage() {
         while (reader) {
           const { done, value } = await reader.read()
           if (done) {
-            updateTestResult(contentBuffer, true)
+            setTestResult(prev => ({
+              input: testInput,
+              output: buffer,
+              model: model
+            }))
             break
           }
 
@@ -397,8 +377,7 @@ export default function OptimizePage() {
                 const json = JSON.parse(data)
                 const content = json.choices[0]?.delta?.content || ''
                 if (content) {
-                  contentBuffer += content
-                  updateTestResult(contentBuffer)
+                  buffer += content
                 }
               } catch (e) {
                 console.error('Error parsing SSE message:', e)
@@ -420,14 +399,11 @@ export default function OptimizePage() {
           model: model
         })
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : '发生未知错误'
-      
+    } catch (error) {
+      console.error(error)
       toast({
         title: "测试失败",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "未知错误",
         variant: "destructive"
       })
     } finally {
