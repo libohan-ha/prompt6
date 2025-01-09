@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = 'AIzaSyAfjO3q_JrrAZ_hCTbjGut4SM_pTohPgjg'
+export const GEMINI_API_KEY = 'AIzaSyAfjO3q_JrrAZ_hCTbjGut4SM_pTohPgjg'
 
 export async function callDeepseek(systemPrompt: string, userPrompt: string) {
   const apiKey = "sk-7e369c68994443ab8c169d8d3612ee8e"
@@ -45,7 +45,7 @@ export async function callDeepseek(systemPrompt: string, userPrompt: string) {
 }
 
 export async function callGemini(systemPrompt: string, userPrompt: string) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-exp-1206:generateContent?key=${GEMINI_API_KEY}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -82,7 +82,7 @@ export async function callGemini(systemPrompt: string, userPrompt: string) {
 }
 
 export async function callGeminiFlash(systemPrompt: string, userPrompt: string) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

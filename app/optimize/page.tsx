@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
-import { callGemini, callGeminiFlash } from "@/lib/api"
+import { callGemini, callGeminiFlash, GEMINI_API_KEY } from "@/lib/api"
 import { getLocalStorage } from '@/lib/utils'
 import type { OptimizedPrompt, TestResult } from '@/types/prompt'
 import { ArrowRightIcon, CopyIcon, Loader2, Play, PlusCircle, Zap } from 'lucide-react'
@@ -392,16 +392,71 @@ export default function OptimizePage() {
           }
         }
       } else {
-        let result
-        if (model === "gemini-2.0-flash-exp") {
-          result = await callGeminiFlash(editedContent, testInput)
-        } else {
-          result = await callGemini(editedContent, testInput)
+        const response = await fetch(
+          model === "gemini-2.0-flash-exp" 
+            ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`
+            : `https://generativelanguage.googleapis.com/v1beta/models/gemini-exp-1206:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: [{
+                role: "user",
+                parts: [{ text: `Instructions: ${editedContent}\n\nInput: ${testInput}` }]
+              }],
+              generationConfig: model === "gemini-2.0-flash-exp" ? {
+                temperature: 0.9,
+                maxOutputTokens: 2048,
+              } : {
+                temperature: 1,
+                topK: 64,
+                topP: 0.95,
+                maxOutputTokens: 8192,
+              }
+            })
+          }
+        )
+
+        if (!response.ok) {
+          const error = await response.json()
+          console.error('Gemini API Error:', error)
+          throw new Error(error.error?.message || '测试请求失败')
         }
-      
+
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        let contentBuffer = ""
+
+        while (reader) {
+          try {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            const chunk = decoder.decode(value)
+            try {
+              const data = JSON.parse(chunk)
+              if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                const text = data.candidates[0].content.parts[0].text
+                contentBuffer += text
+                setTestResult({
+                  input: testInput,
+                  output: contentBuffer,
+                  model: model
+                })
+              }
+            } catch (e) {
+              console.error('Error parsing JSON:', e)
+            }
+          } catch (e) {
+            console.error('Error reading stream:', e)
+          }
+        }
+
         setTestResult({
           input: testInput,
-          output: result,
+          output: contentBuffer,
           model: model
         })
       }
@@ -780,7 +835,7 @@ ${feedback}
                       </>
                     )}
                   </Button>
-                  <Select defaultValue="deepseek-v3" onValueChange={setModel}>
+                  <Select value={model} onValueChange={setModel}>
                     <SelectTrigger className="w-[200px] h-12 sm:h-16 text-base sm:text-lg bg-white border-orange-200 text-orange-600 rounded-xl sm:rounded-2xl">
                       <Zap className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                       <SelectValue />
