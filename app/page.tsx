@@ -1,11 +1,6 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/components/ui/use-toast"
-import { setLocalStorage } from "@/lib/utils"
-import { useRouter } from "next/navigation"
-import React from 'react'
 import {
   Select,
   SelectContent,
@@ -13,7 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/use-toast"
+import { setLocalStorage } from "@/lib/utils"
 import { Zap } from 'lucide-react'
+import { useRouter } from "next/navigation"
+import React from 'react'
 
 export default function Home() {
   const router = useRouter()

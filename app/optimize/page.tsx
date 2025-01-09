@@ -352,15 +352,16 @@ export default function OptimizePage() {
         const reader = response.body?.getReader()
         const decoder = new TextDecoder()
         let buffer = ""
-
+        let contentBuffer = ""
+        
         while (reader) {
           const { done, value } = await reader.read()
           if (done) {
-            setTestResult(prev => ({
+            setTestResult({
               input: testInput,
-              output: buffer,
+              output: contentBuffer,
               model: model
-            }))
+            })
             break
           }
 
@@ -377,7 +378,12 @@ export default function OptimizePage() {
                 const json = JSON.parse(data)
                 const content = json.choices[0]?.delta?.content || ''
                 if (content) {
-                  buffer += content
+                  contentBuffer += content
+                  setTestResult(prev => ({
+                    input: testInput,
+                    output: contentBuffer,
+                    model: model
+                  }))
                 }
               } catch (e) {
                 console.error('Error parsing SSE message:', e)
